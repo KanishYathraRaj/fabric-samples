@@ -90,43 +90,44 @@ router.get('/:id', async (req, res, next) => {
 
 /**
  * @route   POST /api/assets
- * @desc    Create a new asset
+ * @desc    Create a new certificate
  * @access  Public
- * @body    { id, color, size, owner, appraisedValue }
+ * @body    Full certificate object with nested structure
  */
 router.post('/', async (req, res, next) => {
     try {
-        const { id, color, size, owner, appraisedValue } = req.body;
+        // Accept the full certificate object from request body
+        const certificate = req.body;
         
-        // Validate required fields
-        if (!id || !color || !size || !owner || !appraisedValue) {
+        // Validate required field
+        if (!certificate.certificateId) {
             return res.status(400).json({
                 success: false,
                 error: {
-                    message: 'Missing required fields',
-                    details: 'Required fields: id, color, size, owner, appraisedValue'
+                    message: 'Missing required field',
+                    details: 'Required field: certificateId'
                 }
             });
         }
         
-        console.log(`\n--> Submit Transaction: CreateAsset, ID: ${id}`);
+        console.log(`\n--> Submit Transaction: CreateAsset (Certificate), ID: ${certificate.certificateId}`);
         
         const contract = getContract();
-        await contract.submitTransaction(
+        
+        // Send the entire certificate object as JSON string
+        const resultBytes = await contract.submitTransaction(
             'CreateAsset',
-            id,
-            color,
-            String(size),
-            owner,
-            String(appraisedValue)
+            JSON.stringify(certificate)
         );
         
         console.log('*** Transaction committed successfully');
         
+        const result = JSON.parse(utf8Decoder.decode(resultBytes));
+        
         res.status(201).json({
             success: true,
-            message: 'Asset created successfully',
-            data: { id, color, size, owner, appraisedValue }
+            message: 'Certificate created successfully',
+            data: result
         });
     } catch (error) {
         next(error);
@@ -135,44 +136,44 @@ router.post('/', async (req, res, next) => {
 
 /**
  * @route   PUT /api/assets/:id
- * @desc    Update an existing asset
+ * @desc    Update an existing certificate
  * @access  Public
- * @body    { color, size, owner, appraisedValue }
+ * @body    Full certificate object with nested structure
  */
 router.put('/:id', async (req, res, next) => {
     try {
         const { id } = req.params;
-        const { color, size, owner, appraisedValue } = req.body;
+        const certificate = req.body;
         
-        // Validate required fields
-        if (!color || !size || !owner || !appraisedValue) {
+        // Ensure the ID in params matches the certificate
+        if (!certificate.certificateId) {
+            certificate.certificateId = id;
+        } else if (certificate.certificateId !== id) {
             return res.status(400).json({
                 success: false,
                 error: {
-                    message: 'Missing required fields',
-                    details: 'Required fields: color, size, owner, appraisedValue'
+                    message: 'ID mismatch',
+                    details: 'certificateId in body must match URL parameter'
                 }
             });
         }
         
-        console.log(`\n--> Submit Transaction: UpdateAsset, ID: ${id}`);
+        console.log(`\n--> Submit Transaction: UpdateAsset (Certificate), ID: ${id}`);
         
         const contract = getContract();
-        await contract.submitTransaction(
+        const resultBytes = await contract.submitTransaction(
             'UpdateAsset',
-            id,
-            color,
-            String(size),
-            owner,
-            String(appraisedValue)
+            JSON.stringify(certificate)
         );
         
         console.log('*** Transaction committed successfully');
         
+        const result = JSON.parse(utf8Decoder.decode(resultBytes));
+        
         res.status(200).json({
             success: true,
-            message: 'Asset updated successfully',
-            data: { id, color, size, owner, appraisedValue }
+            message: 'Certificate updated successfully',
+            data: result
         });
     } catch (error) {
         next(error);
@@ -206,42 +207,42 @@ router.delete('/:id', async (req, res, next) => {
 
 /**
  * @route   POST /api/assets/:id/transfer
- * @desc    Transfer asset to a new owner
+ * @desc    Transfer certificate to a new learner
  * @access  Public
- * @body    { newOwner }
+ * @body    { newLearnerID }
  */
 router.post('/:id/transfer', async (req, res, next) => {
     try {
         const { id } = req.params;
-        const { newOwner } = req.body;
+        const { newLearnerID } = req.body;
         
         // Validate required fields
-        if (!newOwner) {
+        if (!newLearnerID) {
             return res.status(400).json({
                 success: false,
                 error: {
                     message: 'Missing required field',
-                    details: 'Required field: newOwner'
+                    details: 'Required field: newLearnerID'
                 }
             });
         }
         
-        console.log(`\n--> Submit Transaction: TransferAsset, ID: ${id}, New Owner: ${newOwner}`);
+        console.log(`\n--> Submit Transaction: TransferAsset (Certificate), ID: ${id}, New Learner: ${newLearnerID}`);
         
         const contract = getContract();
-        const resultBytes = await contract.submitTransaction('TransferAsset', id, newOwner);
+        const resultBytes = await contract.submitTransaction('TransferAsset', id, newLearnerID);
         
-        const oldOwner = utf8Decoder.decode(resultBytes);
+        const oldLearnerID = utf8Decoder.decode(resultBytes);
         
-        console.log(`*** Transaction committed successfully: ${oldOwner} -> ${newOwner}`);
+        console.log(`*** Transaction committed successfully: ${oldLearnerID} -> ${newLearnerID}`);
         
         res.status(200).json({
             success: true,
-            message: 'Asset transferred successfully',
+            message: 'Certificate transferred successfully',
             data: {
-                id,
-                oldOwner,
-                newOwner
+                certificateId: id,
+                oldLearnerID,
+                newLearnerID
             }
         });
     } catch (error) {

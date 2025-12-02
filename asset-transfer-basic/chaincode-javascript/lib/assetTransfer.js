@@ -14,132 +14,179 @@ const { Contract } = require('fabric-contract-api');
 class AssetTransfer extends Contract {
 
     async InitLedger(ctx) {
-        const assets = [
+        const certificates = [
             {
-                ID: 'asset1',
-                Color: 'blue',
-                Size: 5,
-                Owner: 'Tomoko',
-                AppraisedValue: 300,
+                certificateId: 'CERT-2025-ORG1-00001',
+                learnerID: 'learner001',
+                issuer: {
+                    issuerID: 'issuer123',
+                    issueDate: '2025-11-29T10:30:00Z'
+                },
+                approver: {
+                    approverIds: ['approver77'],
+                    approved: ['Issued'],
+                    isApproved: true,
+                    approvedDate: '2025-11-30T14:00:00Z'
+                },
+                certificateData: {
+                    certificateName: 'National Apprenticeship Certificate',
+                    courseName: 'Master of Agriculture',
+                    institutionName: 'Skill Institute of Agriculture',
+                    NSQFLevel: 'Level 4'
+                },
+                status: 'Issued',
+                url: 'https://example.com/certificates/CERT-2025-ORG1-00001'
             },
             {
-                ID: 'asset2',
-                Color: 'red',
-                Size: 5,
-                Owner: 'Brad',
-                AppraisedValue: 400,
+                certificateId: 'CERT-2025-ORG1-00002',
+                learnerID: 'learner002',
+                issuer: {
+                    issuerID: 'issuer456',
+                    issueDate: '2025-12-01T09:00:00Z'
+                },
+                approver: {
+                    approverIds: ['approver88'],
+                    approved: ['Pending'],
+                    isApproved: false,
+                    approvedDate: null
+                },
+                certificateData: {
+                    certificateName: 'Software Development Certificate',
+                    courseName: 'Full Stack Development',
+                    institutionName: 'Tech Academy',
+                    NSQFLevel: 'Level 5'
+                },
+                status: 'Pending',
+                url: 'https://example.com/certificates/CERT-2025-ORG1-00002'
             },
             {
-                ID: 'asset3',
-                Color: 'green',
-                Size: 10,
-                Owner: 'Jin Soo',
-                AppraisedValue: 500,
-            },
-            {
-                ID: 'asset4',
-                Color: 'yellow',
-                Size: 10,
-                Owner: 'Max',
-                AppraisedValue: 600,
-            },
-            {
-                ID: 'asset5',
-                Color: 'black',
-                Size: 15,
-                Owner: 'Adriana',
-                AppraisedValue: 700,
-            },
-            {
-                ID: 'asset6',
-                Color: 'white',
-                Size: 15,
-                Owner: 'Michel',
-                AppraisedValue: 800,
-            },
+                certificateId: 'CERT-2025-ORG1-00003',
+                learnerID: 'learner003',
+                issuer: {
+                    issuerID: 'issuer789',
+                    issueDate: '2025-12-02T11:15:00Z'
+                },
+                approver: {
+                    approverIds: ['approver77', 'approver88'],
+                    approved: ['Approved', 'Approved'],
+                    isApproved: true,
+                    approvedDate: '2025-12-02T12:00:00Z'
+                },
+                certificateData: {
+                    certificateName: 'Professional Data Science Certificate',
+                    courseName: 'Machine Learning and AI',
+                    institutionName: 'Data Science Institute',
+                    NSQFLevel: 'Level 6',
+                    duration: '12 months',
+                    grade: 'A+'
+                },
+                status: 'Issued',
+                url: 'https://example.com/certificates/CERT-2025-ORG1-00003'
+            }
         ];
 
-        for (const asset of assets) {
-            asset.docType = 'asset';
-            // example of how to write to world state deterministically
-            // use convetion of alphabetic order
+        for (const certificate of certificates) {
+            certificate.docType = 'certificate';
             // we insert data in alphabetic order using 'json-stringify-deterministic' and 'sort-keys-recursive'
-            // when retrieving data, in any lang, the order of data will be the same and consequently also the corresonding hash
-            await ctx.stub.putState(asset.ID, Buffer.from(stringify(sortKeysRecursive(asset))));
+            await ctx.stub.putState(certificate.certificateId, Buffer.from(stringify(sortKeysRecursive(certificate))));
+            console.info(`Certificate ${certificate.certificateId} initialized`);
         }
     }
 
-    // CreateAsset issues a new asset to the world state with given details.
-    async CreateAsset(ctx, id, color, size, owner, appraisedValue) {
-        const exists = await this.AssetExists(ctx, id);
+    // CreateAsset creates a new certificate in the world state.
+    // Accepts a JSON string containing the full certificate structure
+    async CreateAsset(ctx, certificateJson) {
+        const certificate = JSON.parse(certificateJson);
+        
+        // Validate required field
+        if (!certificate.certificateId) {
+            throw new Error('certificateId is required');
+        }
+        
+        const exists = await this.AssetExists(ctx, certificate.certificateId);
         if (exists) {
-            throw new Error(`The asset ${id} already exists`);
+            throw new Error(`The certificate ${certificate.certificateId} already exists`);
         }
 
-        const asset = {
-            ID: id,
-            Color: color,
-            Size: Number(size),
-            Owner: owner,
-            AppraisedValue: Number(appraisedValue),
-        };
-        // we insert data in alphabetic order using 'json-stringify-deterministic' and 'sort-keys-recursive'
-        await ctx.stub.putState(id, Buffer.from(stringify(sortKeysRecursive(asset))));
-        return JSON.stringify(asset);
+        // Add docType for querying
+        // certificate.docType = 'certificate';
+        
+        // Set default status if not provided
+        // if (!certificate.status) {
+        //     certificate.status = 'Pending';
+        // }
+        
+        // Set default approver if not provided
+        // if (!certificate.approver) {
+        //     certificate.approver = {
+        //         approverIds: [],
+        //         approved: [],
+        //         isApproved: false,
+        //         approvedDate: null
+        //     };
+        // }
+        
+        // Store certificate with deterministic JSON
+        await ctx.stub.putState(certificate.certificateId, Buffer.from(stringify(sortKeysRecursive(certificate))));
+        console.info(`Certificate ${certificate.certificateId} created`);
+        return JSON.stringify(certificate);
     }
 
-    // ReadAsset returns the asset stored in the world state with given id.
+    // ReadAsset returns the certificate stored in the world state with given id.
     async ReadAsset(ctx, id) {
-        const assetJSON = await ctx.stub.getState(id); // get the asset from chaincode state
+        const assetJSON = await ctx.stub.getState(id); // get the certificate from chaincode state
         if (!assetJSON || assetJSON.length === 0) {
-            throw new Error(`The asset ${id} does not exist`);
+            throw new Error(`The certificate ${id} does not exist`);
         }
         return assetJSON.toString();
     }
 
-    // UpdateAsset updates an existing asset in the world state with provided parameters.
-    async UpdateAsset(ctx, id, color, size, owner, appraisedValue) {
-        const exists = await this.AssetExists(ctx, id);
+    // UpdateAsset updates an existing certificate in the world state.
+    // Accepts a JSON string containing the updated certificate structure
+    async UpdateAsset(ctx, certificateJson) {
+        const certificate = JSON.parse(certificateJson);
+        
+        if (!certificate.certificateId) {
+            throw new Error('certificateId is required');
+        }
+        
+        const exists = await this.AssetExists(ctx, certificate.certificateId);
         if (!exists) {
-            throw new Error(`The asset ${id} does not exist`);
+            throw new Error(`The certificate ${certificate.certificateId} does not exist`);
         }
 
-        // overwriting original asset with new asset
-        const updatedAsset = {
-            ID: id,
-            Color: color,
-            Size: size,
-            Owner: owner,
-            AppraisedValue: appraisedValue,
-        };
-        // we insert data in alphabetic order using 'json-stringify-deterministic' and 'sort-keys-recursive'
-        return ctx.stub.putState(id, Buffer.from(stringify(sortKeysRecursive(updatedAsset))));
+        // Store updated certificate with deterministic JSON
+        await ctx.stub.putState(certificate.certificateId, Buffer.from(stringify(sortKeysRecursive(certificate))));
+        console.info(`Certificate ${certificate.certificateId} updated`);
+        return JSON.stringify(certificate);
     }
 
-    // DeleteAsset deletes an given asset from the world state.
+    // DeleteAsset deletes a given certificate from the world state.
     async DeleteAsset(ctx, id) {
         const exists = await this.AssetExists(ctx, id);
         if (!exists) {
-            throw new Error(`The asset ${id} does not exist`);
+            throw new Error(`The certificate ${id} does not exist`);
         }
+        console.info(`Certificate ${id} deleted`);
         return ctx.stub.deleteState(id);
     }
 
-    // AssetExists returns true when asset with given ID exists in world state.
+    // AssetExists returns true when certificate with given ID exists in world state.
     async AssetExists(ctx, id) {
         const assetJSON = await ctx.stub.getState(id);
         return assetJSON && assetJSON.length > 0;
     }
 
-    // TransferAsset updates the owner field of asset with given id in the world state.
-    async TransferAsset(ctx, id, newOwner) {
-        const assetString = await this.ReadAsset(ctx, id);
-        const asset = JSON.parse(assetString);
-        const oldOwner = asset.Owner;
-        asset.Owner = newOwner;
+    // TransferAsset updates the learnerID of a certificate (transfer to new learner)
+    async TransferAsset(ctx, id, newLearnerID) {
+        const certificateString = await this.ReadAsset(ctx, id);
+        const certificate = JSON.parse(certificateString);
+        const oldLearnerID = certificate.learnerID;
+        certificate.learnerID = newLearnerID;
         // we insert data in alphabetic order using 'json-stringify-deterministic' and 'sort-keys-recursive'
-        await ctx.stub.putState(id, Buffer.from(stringify(sortKeysRecursive(asset))));
-        return oldOwner;
+        await ctx.stub.putState(id, Buffer.from(stringify(sortKeysRecursive(certificate))));
+        console.info(`Certificate ${id} transferred from ${oldLearnerID} to ${newLearnerID}`);
+        return oldLearnerID;
     }
 
     // GetAllAssets returns all assets found in the world state.

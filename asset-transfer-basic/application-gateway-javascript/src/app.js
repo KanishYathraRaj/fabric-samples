@@ -190,23 +190,44 @@ async function getAllAssets(contract) {
 }
 
 /**
- * Submit a transaction synchronously, blocking until it has been committed to the ledger.
+ * Submit a transaction synchronously, creating a new certificate.
  */
 async function createAsset(contract) {
     console.log(
-        '\n--> Submit Transaction: CreateAsset, creates new asset with ID, Color, Size, Owner and AppraisedValue arguments'
+        '\n--> Submit Transaction: CreateAsset, creates new certificate with full structure'
     );
+
+    const certificateId = `CERT-${Date.now()}`;
+    const certificate = {
+        certificateId: certificateId,
+        learnerID: 'learner999',
+        issuer: {
+            issuerID: 'issuer123',
+            issueDate: new Date().toISOString()
+        },
+        approver: {
+            approverIds: ['approver99'],
+            approved: ['Pending'],
+            isApproved: false,
+            approvedDate: null
+        },
+        certificateData: {
+            certificateName: 'Demo Certificate',
+            courseName: 'Blockchain Development',
+            institutionName: 'Tech Institute',
+            NSQFLevel: 'Level 5'
+        },
+        status: 'Pending',
+        url: `https://example.com/certificates/${certificateId}`
+    };
 
     await contract.submitTransaction(
         'CreateAsset',
-        assetId,
-        'yellow',
-        '5',
-        'Tom',
-        '1300'
+        JSON.stringify(certificate)
     );
 
     console.log('*** Transaction committed successfully');
+    console.log('*** Certificate created:', certificateId);
 }
 
 /**

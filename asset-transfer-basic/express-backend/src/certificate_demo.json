@@ -12,9 +12,9 @@
     "approvedDate": null
   },
   "certificateData" : {
-    "name" : "National Apprenticeship Certificate",
-    "title" : "Master of Agriculture",
-    "institution": "Skill Institute of Agriculture",
+    "certificateName" : "National Apprenticeship Certificate",
+    "courseName" : "Master of Agriculture",
+    "institutionName": "Skill Institute of Agriculture",
     "NSQFLevel" : "Level 4"
   },
   "status": "Pending",
