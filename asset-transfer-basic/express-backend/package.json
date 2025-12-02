@@ -1,0 +1,30 @@
+{
+    "name": "asset-transfer-express-backend",
+    "version": "1.0.0",
+    "description": "Express.js backend for Hyperledger Fabric Asset Transfer",
+    "main": "src/server.js",
+    "scripts": {
+        "start": "node src/server.js",
+        "dev": "nodemon src/server.js",
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "keywords": [
+        "hyperledger",
+        "fabric",
+        "express",
+        "blockchain"
+    ],
+    "author": "",
+    "license": "Apache-2.0",
+    "dependencies": {
+        "@grpc/grpc-js": "^1.14.0",
+        "@hyperledger/fabric-gateway": "^1.10.0",
+        "cors": "^2.8.5",
+        "dotenv": "^16.3.1",
+        "express": "^4.21.0",
+        "morgan": "^1.10.0"
+    },
+    "devDependencies": {
+        "nodemon": "^3.0.1"
+    }
+}

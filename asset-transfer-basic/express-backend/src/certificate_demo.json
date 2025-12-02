@@ -1,0 +1,22 @@
+{
+  "certificateId": "CERT-2025-ORG1-00001",
+  "learnerID" : "learner123",
+  "issuer": {
+    "issuerID" : "issuer123",
+    "issueDate": "2025-11-29T10:30:00Z"
+  },
+  "approver": {
+    "approverIds": ["approver77","approver88"],
+    "approved": ["Pending","Issued"],
+    "isApproved": false,
+    "approvedDate": null
+  },
+  "certificateData" : {
+    "name" : "National Apprenticeship Certificate",
+    "title" : "Master of Agriculture",
+    "institution": "Skill Institute of Agriculture",
+    "NSQFLevel" : "Level 4"
+  },
+  "status": "Pending",
+  "url": "https://example.com/certificates/CERT-2025-ORG1-00001",
+}
